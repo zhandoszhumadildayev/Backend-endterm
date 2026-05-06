@@ -1,0 +1,224 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PARENT
+  ADMIN
+}
+
+enum ExerciseType {
+  PHONICS
+  HANDWRITING
+  SIGHT_WORDS
+  VOCABULARY
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum NotificationType {
+  MILESTONE
+  STREAK_REMINDER
+  WEEKLY_SUMMARY
+}
+
+model User {
+  id            String         @id @default(uuid())
+  name          String?
+  email         String         @unique
+  passwordHash  String
+  role          Role           @default(PARENT)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  children      Child[]
+  refreshTokens RefreshToken[]
+  notifications Notification[] @relation("ParentNotifications")
+  activityLogs  ActivityLog[]  @relation("AdminLogs")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Child {
+  id                 String           @id @default(uuid())
+  parentId           String
+  displayName        String
+  age                Int
+  avatarUrl          String?
+  learningLevel      String           @default("Level 1")
+  xp                 Int              @default(0)
+  level              Int              @default(1)
+  streak             Int              @default(0)
+  lastActiveDate     DateTime?
+  progressPercentage Float            @default(0)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  parent             User             @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  exerciseResults    ExerciseResult[]
+  lessonProgress     LessonProgress[]
+  badges             ChildBadge[]
+  notifications      Notification[]
+
+  @@index([parentId])
+  @@index([age])
+  @@index([xp])
+}
+
+model Unit {
+  id          String    @id @default(uuid())
+  title       Json
+  description Json?
+  orderNo     Int
+  difficulty  Difficulty @default(EASY)
+  published   Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  lessons     Lesson[]
+
+  @@index([published])
+  @@index([orderNo])
+}
+
+model Lesson {
+  id           String           @id @default(uuid())
+  unitId       String
+  title        Json
+  instructions Json?
+  orderNo      Int
+  difficulty   Difficulty       @default(EASY)
+  xpReward     Int              @default(10)
+  published    Boolean          @default(false)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  unit         Unit             @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  exercises    Exercise[]
+  progress     LessonProgress[]
+
+  @@index([unitId])
+  @@index([published])
+  @@index([difficulty])
+  @@index([orderNo])
+}
+
+model Exercise {
+  id            String           @id @default(uuid())
+  lessonId      String
+  type          ExerciseType
+  prompt        Json
+  options       Json?
+  correctAnswer String
+  orderNo       Int
+  difficulty    Difficulty       @default(EASY)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  lesson        Lesson           @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  results       ExerciseResult[]
+
+  @@index([lessonId])
+  @@index([type])
+  @@index([difficulty])
+}
+
+model ExerciseResult {
+  id               String   @id @default(uuid())
+  childId          String
+  exerciseId       String
+  answer           String
+  correct          Boolean
+  timeTakenSeconds Int
+  score            Int
+  createdAt        DateTime @default(now())
+  child            Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  exercise         Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@index([childId])
+  @@index([exerciseId])
+  @@index([createdAt])
+}
+
+model LessonProgress {
+  id          String   @id @default(uuid())
+  childId     String
+  lessonId    String
+  completedAt DateTime @default(now())
+  xpAwarded   Int
+  child       Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, lessonId])
+  @@index([childId])
+  @@index([lessonId])
+}
+
+model Badge {
+  id          String       @id @default(uuid())
+  code        String       @unique
+  name        String
+  description String
+  createdAt   DateTime     @default(now())
+  children    ChildBadge[]
+}
+
+model ChildBadge {
+  id        String   @id @default(uuid())
+  childId   String
+  badgeId   String
+  awardedAt DateTime @default(now())
+  child     Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, badgeId])
+  @@index([childId])
+  @@index([badgeId])
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  parentId  String
+  childId   String?
+  type      NotificationType
+  title     String
+  message   String
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  parent    User             @relation("ParentNotifications", fields: [parentId], references: [id], onDelete: Cascade)
+  child     Child?           @relation(fields: [childId], references: [id], onDelete: SetNull)
+
+  @@index([parentId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  adminId   String
+  action    String
+  entity    String
+  entityId  String?
+  before    Json?
+  after     Json?
+  createdAt DateTime @default(now())
+  admin     User     @relation("AdminLogs", fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([createdAt])
+  @@index([entity])
+}
