@@ -8,8 +8,8 @@ export default function TopBar({ session, onLogout }) {
       <div className="brand">
         <div className="brand-mark"><BookOpen size={22} /></div>
         <div>
-          <strong>Literacy Platform</strong>
-          <span>Детская обучающая платформа</span>
+          <strong>Smart Kids Platform</strong>
+          <span>Интерактивная обучающая платформа для детей</span>
         </div>
       </div>
 

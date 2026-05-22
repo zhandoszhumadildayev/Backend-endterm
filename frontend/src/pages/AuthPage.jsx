@@ -29,7 +29,7 @@ export default function AuthPage({ onAuth }) {
   return (
     <div className="auth-layout desktop-auth">
       <section className="hero-card wide-hero">
-        <div className="badge-soft"><BookOpen size={18} /> Learning Platform</div>
+        <div className="badge-soft"><BookOpen size={18} /> Smart Kids Learning Platform</div>
         <h1>Детская платформа для чтения</h1>
         <p>Родитель добавляет ребенка, запускает уроки, видит прогресс, баллы, уведомления и время занятий.</p>
         <div className="feature-grid">

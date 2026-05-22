@@ -2,16 +2,18 @@ import React from 'react';
 
 export default function GuideCharacter() {
   return (
-    <div className="guide-wrap">
-      <div className="guide-bird" aria-label="Learning assistant">
-        <div className="bird-ear left" />
-        <div className="bird-ear right" />
-        <div className="bird-eye left"><span /></div>
-        <div className="bird-eye right"><span /></div>
-        <div className="bird-beak" />
-        <div className="bird-book"><span /><span /></div>
+    <div className="guide-character">
+      <div className="robot-head">
+        <div className="robot-eyes">
+          <span className="robot-eye"></span>
+          <span className="robot-eye"></span>
+        </div>
+        <div className="robot-mouth"></div>
       </div>
-      <div className="guide-bubble">Готов к уроку? 🚀</div>
+      <div className="robot-body">
+        <div className="robot-panel"></div>
+      </div>
+      <p className="guide-text">Привет! Я RoboKid, твой помощник.</p>
     </div>
   );
 }
