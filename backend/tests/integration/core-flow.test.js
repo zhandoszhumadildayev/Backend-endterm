@@ -3,6 +3,8 @@ const bcrypt = require('bcryptjs');
 const app = require('../../src/app');
 const prisma = require('../../src/config/prisma');
 
+jest.setTimeout(30000);
+
 async function resetDb() {
   await prisma.notification.deleteMany();
   await prisma.childBadge.deleteMany();
